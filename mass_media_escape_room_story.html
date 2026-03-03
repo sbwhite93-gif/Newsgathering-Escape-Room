@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mass Media Law Escape Room – The Riverside Ledger</title>
+<style>
+  :root{--ink:#1a1008;--paper:#f5efe0;--aged:#e8dcc8;--accent:#b8321a;--gold:#c9942a;--dark:#0f0a04;--chain:#8a7a5a;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Georgia,'Times New Roman',serif;background:var(--dark);color:var(--ink);min-height:100vh;}
+  #app{max-width:800px;margin:0 auto;padding:20px;}
+  .screen{display:none;} .screen.active{display:block;}
+  #intro{text-align:center;padding:26px 10px;}
+  .masthead{background:var(--paper);border:4px double var(--ink);border-top:8px solid var(--accent);padding:30px 26px 24px;box-shadow:0 0 0 2px var(--gold),8px 8px 0 rgba(0,0,0,0.55);}
+  .kicker{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);font-weight:bold;margin-bottom:8px;}
+  .rule{height:2px;background:linear-gradient(90deg,transparent,var(--ink) 20%,var(--ink) 80%,transparent);margin:12px 0;}
+  .rule.thin{height:1px;opacity:0.3;}
+  .masthead h1{font-family:'Times New Roman',serif;font-size:clamp(34px,8vw,70px);letter-spacing:3px;color:var(--ink);line-height:1;text-transform:uppercase;font-weight:900;}
+  .masthead h2{font-size:clamp(12px,2.5vw,15px);color:var(--accent);letter-spacing:4px;text-transform:uppercase;font-style:italic;margin:8px 0 12px;}
+  .ch-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0;}
+  .badge{background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:1px;padding:5px 14px;text-transform:uppercase;font-weight:bold;}
+  .story-intro{text-align:left;background:var(--aged);border-left:4px solid var(--accent);padding:16px 18px;margin:14px 0;font-size:15px;line-height:1.8;color:#2a1e10;}
+  .story-intro p{margin-bottom:10px;} .story-intro p:last-child{margin-bottom:0;}
+  .start-btn{display:inline-block;margin-top:16px;background:var(--accent);color:var(--paper);font-size:19px;letter-spacing:4px;text-transform:uppercase;font-weight:bold;padding:13px 42px;border:none;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s;font-family:Georgia,serif;}
+  .start-btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}
+  #game{animation:fadeIn .4s ease;} @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .timer-bar{background:var(--ink);border:2px solid var(--gold);margin-bottom:10px;padding:8px 16px;display:flex;align-items:center;gap:14px;box-shadow:3px 3px 0 rgba(0,0,0,0.5);}
+  .timer-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;color:var(--gold);white-space:nowrap;}
+  .timer-display{font-family:'Courier New',monospace;font-size:28px;font-weight:bold;color:var(--paper);letter-spacing:3px;min-width:90px;text-align:center;transition:color .3s;}
+  .timer-display.warning{color:#f0c040;} .timer-display.danger{color:var(--accent);animation:pulse .8s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.45}}
+  .timer-track{flex:1;height:8px;background:#3a2a0a;border:1px solid var(--chain);overflow:hidden;}
+  .timer-fill{height:100%;background:linear-gradient(90deg,#28a745,var(--gold));transition:width 1s linear,background 1s;}
+  .timer-fill.warning{background:linear-gradient(90deg,var(--gold),#f0c040);}
+  .timer-fill.danger{background:linear-gradient(90deg,var(--accent),#ff6b3d);}
+  .progress-bar-wrap{background:var(--paper);border:2px solid var(--ink);margin-bottom:12px;padding:9px 16px;display:flex;align-items:center;gap:12px;box-shadow:3px 3px 0 rgba(0,0,0,0.4);}
+  .progress-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;white-space:nowrap;color:var(--ink);}
+  .progress-track{flex:1;height:10px;background:var(--aged);border:1px solid var(--chain);overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--accent));transition:width .5s ease;}
+  .q-counter{font-size:18px;font-weight:bold;color:var(--accent);min-width:52px;text-align:right;}
+  .score-strip{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;}
+  .score-dot{width:26px;height:26px;border:2px solid var(--chain);background:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:var(--chain);transition:all .3s;}
+  .score-dot.correct{background:#28a745;border-color:#28a745;color:white;}
+  .score-dot.wrong{background:var(--accent);border-color:var(--accent);color:white;}
+  .question-card{background:var(--paper);border:2px solid var(--ink);box-shadow:5px 5px 0 rgba(0,0,0,0.5);padding:24px 22px 20px;position:relative;}
+  .chapter-tag{position:absolute;top:-1px;right:14px;background:var(--accent);color:var(--paper);font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:3px 10px;}
+  .q-label{font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--chain);font-weight:bold;margin-bottom:6px;}
+  .story-beat{background:#1a1008;color:#f5efe0;border-left:4px solid var(--gold);padding:13px 16px;margin:8px 0 6px;font-size:14px;line-height:1.75;font-style:italic;}
+  .legal-panel{background:var(--aged);border-left:4px solid var(--accent);padding:10px 14px;margin:8px 0 14px;font-size:13px;line-height:1.65;color:#3a2e1a;}
+  .legal-panel-lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;color:var(--accent);margin-bottom:4px;}
+  .q-text{font-size:17px;font-weight:bold;line-height:1.5;margin-bottom:5px;color:var(--ink);}
+  .hint-text{font-size:13px;color:var(--chain);margin-bottom:14px;font-style:italic;}
+  .answer-row{display:flex;gap:10px;}
+  .answer-input{flex:1;font-family:'Courier New',monospace;font-size:18px;padding:10px 14px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none;letter-spacing:2px;transition:border-color .2s;}
+  .answer-input:focus{border-color:var(--accent);}
+  .submit-btn{background:var(--ink);color:var(--paper);border:none;font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;padding:0 20px;cursor:pointer;transition:background .15s;font-family:Georgia,serif;}
+  .submit-btn:hover{background:var(--accent);}
+  .tries-row{display:flex;gap:6px;margin-top:10px;align-items:center;}
+  .tries-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;color:var(--chain);margin-right:2px;}
+  .try-icon{width:16px;height:16px;border-radius:50%;background:var(--gold);transition:background .2s;}
+  .try-icon.used{background:var(--accent);}
+  .feedback{margin-top:12px;padding:10px 14px;font-size:15px;font-style:italic;display:none;}
+  .feedback.correct{background:#d4edda;border-left:4px solid #28a745;color:#155724;display:block;}
+  .feedback.wrong{background:#f8d7da;border-left:4px solid var(--accent);color:#721c24;display:block;}
+  .nav-row{display:flex;justify-content:space-between;margin-top:14px;gap:10px;}
+  .nav-btn{background:var(--paper);border:2px solid var(--ink);color:var(--ink);font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;padding:9px 20px;cursor:pointer;transition:background .15s,color .15s;font-family:Georgia,serif;}
+  .nav-btn:hover{background:var(--ink);color:var(--paper);}
+  .nav-btn:disabled{opacity:0.3;cursor:default;pointer-events:none;}
+  .nav-btn.primary{background:var(--gold);border-color:var(--gold);color:var(--ink);}
+  .nav-btn.primary:hover{background:var(--accent);border-color:var(--accent);color:var(--paper);}
+  #victory{text-align:center;}
+  .victory-paper{background:var(--paper);border:4px double var(--ink);border-top:8px solid var(--gold);padding:36px 24px;box-shadow:0 0 0 2px var(--accent),8px 8px 0 rgba(0,0,0,0.5);animation:zoomIn .6s cubic-bezier(0.34,1.56,0.64,1) both;}
+  @keyframes zoomIn{from{opacity:0;transform:scale(0.75)}to{opacity:1;transform:scale(1)}}
+  .ornament{font-size:22px;color:var(--gold);letter-spacing:10px;margin:12px 0;}
+  .headline-big{font-family:'Times New Roman',serif;font-size:clamp(38px,10vw,78px);font-weight:900;letter-spacing:2px;color:var(--accent);line-height:0.95;text-transform:uppercase;margin:12px 0 8px;}
+  .sub-headline{font-style:italic;font-size:16px;color:var(--ink);margin:8px 0 16px;}
+  .score-boxes{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:14px 0;}
+  .score-box{display:inline-block;border:3px solid var(--ink);padding:14px 22px;}
+  .score-num{font-size:52px;font-weight:900;color:var(--gold);line-height:1;}
+  .score-denom{font-size:14px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:var(--ink);}
+  .grade-badge{display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:50%;background:var(--accent);color:var(--paper);font-size:34px;font-weight:900;margin:0 0 12px;box-shadow:0 0 0 4px var(--gold),0 0 0 8px var(--ink);}
+  .replay-btn{display:inline-block;margin-top:18px;background:var(--ink);color:var(--paper);font-size:18px;letter-spacing:4px;text-transform:uppercase;font-weight:bold;padding:13px 38px;border:none;cursor:pointer;box-shadow:4px 4px 0 var(--accent);transition:transform .1s,box-shadow .1s;font-family:Georgia,serif;}
+  .replay-btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--accent);}
+  details summary{cursor:pointer;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:bold;color:var(--accent);padding:8px 0;}
+  #answer-key table{width:100%;border-collapse:collapse;font-size:13px;}
+  #answer-key th{background:var(--ink);color:var(--paper);padding:7px 10px;text-align:left;}
+  #answer-key td{padding:6px 10px;}
+  @media(max-width:500px){.answer-row{flex-direction:column}.submit-btn{padding:12px}.question-card{padding:16px 12px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="intro" class="screen active">
+  <div class="masthead">
+    <div class="kicker">&#9733; Breaking Investigation &#9733;</div>
+    <div class="rule"></div>
+    <h1>The Riverside<br>Ledger</h1>
+    <h2>Mass Media Law &mdash; Escape Room Challenge</h2>
+    <div class="rule"></div>
+    <div class="ch-badges">
+      <div class="badge">Chapter 9: Newsgathering</div>
+      <div class="badge">Chapter 10: Protection of Sources</div>
+    </div>
+    <div class="story-intro">
+      <p>You are <strong>Jordan Vale</strong>, senior investigative reporter for <em>The Riverside Ledger</em>. It is a Tuesday morning when an unmarked envelope slides under your office door. Inside: a spreadsheet showing $4.2 million in city construction contracts awarded to <strong>Croft &amp; Associates LLC</strong> &mdash; a shell company registered to the mayor's brother-in-law.</p>
+      <p>Mayor <strong>Harlan Croft</strong> has held office for eleven years. He is beloved, connected, and ruthless. If this document is real, he is corrupt to the bone.</p>
+      <p>Your editor, <strong>Diane Marsh</strong>, gives you one directive: <em>"Get the documents. Get the story. Don't get us sued."</em></p>
+      <p>You have 20 steps ahead: federal records requests, closed government meetings, a student privacy wall, a hospitalized witness, a confidential source, and a judge threatening to jail you. Every question picks up exactly where the last left off. Answer correctly to advance the investigation and break the story before time runs out.</p>
+    </div>
+    <div class="rule thin"></div>
+    <p style="font-size:13px;color:#6a5a3a;font-style:italic;">20 Questions &nbsp;&#183;&nbsp; 3 Attempts Each &nbsp;&#183;&nbsp; 20-Minute Timer &nbsp;&#183;&nbsp; Answer Key at Finish</p>
+    <button class="start-btn" onclick="startGame()">Begin Investigation &#8594;</button>
+  </div>
+</div>
+
+<div id="game" class="screen">
+  <div class="timer-bar">
+    <span style="font-size:18px">&#9201;</span>
+    <span class="timer-label">Deadline</span>
+    <div class="timer-display" id="timer-display">20:00</div>
+    <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+  </div>
+  <div class="progress-bar-wrap">
+    <span class="progress-label">Investigation Progress</span>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <span class="q-counter" id="q-counter">1 / 20</span>
+  </div>
+  <div class="score-strip" id="score-strip"></div>
+  <div class="question-card">
+    <div class="chapter-tag" id="chapter-tag"></div>
+    <div class="q-label" id="q-label"></div>
+    <div class="story-beat" id="story-beat"></div>
+    <div class="legal-panel">
+      <div class="legal-panel-lbl">&#9878; Legal Challenge</div>
+      <div id="legal-context"></div>
+    </div>
+    <div class="q-text" id="q-text"></div>
+    <div class="hint-text" id="hint-text"></div>
+    <div class="answer-row">
+      <input type="text" class="answer-input" id="answer-input" placeholder="Type your answer..." autocomplete="off"/>
+      <button class="submit-btn" onclick="checkAnswer()">Submit</button>
+    </div>
+    <div class="tries-row">
+      <span class="tries-label">Attempts:</span>
+      <div class="try-icon" id="try1"></div>
+      <div class="try-icon" id="try2"></div>
+      <div class="try-icon" id="try3"></div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="nav-row">
+      <button class="nav-btn" id="prev-btn" onclick="prevQ()" disabled>&#8592; Back</button>
+      <button class="nav-btn primary" id="next-btn" onclick="nextQ()" disabled>Next &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<div id="victory" class="screen">
+  <div class="victory-paper">
+    <div class="ornament">&#10022; &#10022; &#10022;</div>
+    <p style="font-size:11px;letter-spacing:4px;text-transform:uppercase;color:var(--chain);font-weight:bold;">The Riverside Ledger &mdash; Special Edition</p>
+    <div class="headline-big">Mayor<br>Croft<br>Indicted</div>
+    <p class="sub-headline">&mdash; Jordan Vale's investigation exposes $4.2M contract fraud &mdash;</p>
+    <div class="rule"></div>
+    <div class="grade-badge" id="grade-badge"></div><br>
+    <div class="score-boxes">
+      <div class="score-box"><div class="score-num" id="final-score"></div><div class="score-denom">Correct out of 20</div></div>
+      <div class="score-box"><div class="score-num" id="final-time" style="color:var(--gold)"></div><div class="score-denom">Time Used</div></div>
+    </div>
+    <p id="grade-comment" style="font-style:italic;font-size:15px;color:#4a3a28;margin-top:10px;"></p>
+    <div class="rule"></div>
+    <details style="text-align:left;margin-top:14px;">
+      <summary>&#9658; View Full Answer Key</summary>
+      <div id="answer-key" style="margin-top:10px;overflow-x:auto;"></div>
+    </details>
+    <button class="replay-btn" onclick="restartGame()">Investigate Again</button>
+  </div>
+</div>
+
+</div>
+<script>
+var Q=[
+{c:"Ch. 9 - Newsgathering",l:"Question 1 of 20",
+s:"You sit at your desk, staring at the spreadsheet. The contracts are federal money funneled through city accounts. To build a paper trail, you need the original federal contracting records from the U.S. Department of Housing and Urban Development. You draft a formal written request &mdash; but you need to invoke the correct federal law to make it enforceable.",
+lc:"Citizens and journalists have a statutory right to request records held by federal agencies. A specific federal law &mdash; enacted in 1966 &mdash; established this right and created a process for enforcing it.",
+q:"What federal law gives citizens the right to request federal government records?",
+h:"(Acronym &mdash; 4 letters)",a:["foia"],d:"FOIA"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 2 of 20",
+s:"Two weeks pass. A denial letter arrives from HUD. The agency claims the contract records fall under one of several exempted categories. Diane slaps the letter on your desk. \"They can't just say no. You need to know exactly how many doors the law lets them close &mdash; so we can challenge which door they're hiding behind.\"",
+lc:"FOIA is a powerful tool, but Congress built in specific categories of information that agencies may lawfully withhold. Knowing the exact number is the first step to identifying whether this denial was legitimate.",
+q:"How many exemptions does FOIA contain that allow agencies to withhold records?",
+h:"(Enter the number or spell it out)",a:["9","nine"],d:"9 (nine)"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 3 of 20",
+s:"You file an appeal. HUD's attorney finally clarifies the real issue: Croft & Associates claims its billing records contain proprietary pricing formulas. Your media lawyer Sandra Osei opens her annotated copy of the statute. \"They're invoking a specific exemption,\" she says. \"If we can show it doesn't properly apply here, we win the appeal.\"",
+lc:"One of FOIA's nine exemptions specifically protects trade secrets and confidential commercial or financial information submitted by private companies to the government. Identifying the correct exemption number is essential to challenging the denial.",
+q:"Which FOIA exemption protects trade secrets and confidential commercial information?",
+h:"(Enter \"Exemption\" followed by the number, or just the number)",a:["exemption 4","exemption4","4"],d:"Exemption 4"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 4 of 20",
+s:"While the federal appeal drags on, a tip arrives: Riverside City Council will vote Thursday night on renewing the Croft contract &mdash; in a closed executive session with no press allowed. Sandra is already pulling up state law. \"He can't hide a public business vote from the public,\" she says. \"There are state laws designed to prevent exactly this.\"",
+lc:"Most states require government bodies to conduct official business in open, publicly accessible meetings. These laws earned a popular nickname tied to transparency and open government.",
+q:"State laws requiring government meetings to be open to the public are commonly called _______ laws.",
+h:"(Fill in the blank &mdash; starts with 'S')",a:["sunshine","sunshine laws","open meetings"],d:"Sunshine (laws)"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 5 of 20",
+s:"You arrive Thursday night with your press badge. A city attorney blocks the door. \"You have no special right to be here,\" he says. \"The First Amendment protects what you publish &mdash; not your ability to get into this room. Journalists don't get access privileges that ordinary citizens don't have.\" Your instinct is to push back. But is he legally correct?",
+lc:"This is one of the most misunderstood principles in media law. The First Amendment's press protections are real &mdash; but does the Constitution grant journalists special or enhanced access to government spaces and information beyond what any citizen enjoys?",
+q:"Does the First Amendment grant journalists special access rights to government information beyond what ordinary citizens have?",
+h:"(Yes or No)",a:["no"],d:"No"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 6 of 20",
+s:"After the Ledger publishes its first story, Mayor Croft retaliates. His press secretary calls Diane: the Ledger is permanently banned from all mayoral press conferences. Diane forwards you a case citation by email. \"This has been litigated before,\" she writes. \"Look up Baltimore Sun v. _______.\"",
+lc:"A federal appeals court addressed whether a governor could constitutionally ban a specific news outlet from press briefings as punishment for unfavorable coverage. The defendant's last name completes the citation.",
+q:"In Baltimore Sun v. _______, the court addressed whether officials may retaliate against journalists by denying press access.",
+h:"(Fill in the governor's last name)",a:["ehrlich"],d:"Ehrlich"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 7 of 20",
+s:"A source inside City Hall tells you that Mayor Croft's son Derek received a full scholarship from Riverside State University the same semester his father approved the university's construction contract. You file a records request for Derek's scholarship file. The registrar's office refuses immediately. \"Federal law prohibits us from releasing that,\" the registrar says.",
+lc:"A 1974 federal law protects the privacy of students' educational records at institutions receiving federal funding. Releasing those records without consent &mdash; even to journalists &mdash; violates federal law and puts the institution's funding at risk.",
+q:"What federal law protects the privacy of student education records?",
+h:"(Acronym &mdash; 5 letters)",a:["ferpa"],d:"FERPA"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 8 of 20",
+s:"Marcus Finley, the city's former budget director who approved the contracts, was hospitalized last month after a breakdown. You contact Riverside General Hospital requesting any records confirming his admission. The hospital's legal team cuts you off immediately: \"We are prohibited from confirming or denying any patient information under federal law.\"",
+lc:"A 1996 federal law established national standards protecting the privacy of individuals' medical information. It strictly limits who can access health records and under what narrow circumstances any disclosure is permitted.",
+q:"What federal law protects the privacy of patients' health information?",
+h:"(Acronym &mdash; 5 letters)",a:["hipaa","hippa"],d:"HIPAA"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 9 of 20",
+s:"You're heading out for a stakeout at City Hall. Before you leave, Diane sits you down. \"Reporters have ended careers doing exactly what you're about to do,\" she says, sliding a folder across the desk. \"Know what lines you cannot cross. The legal liability for getting this wrong falls on us.\" The folder lists the most common legal dangers for journalists in the field.",
+lc:"While gathering news, journalists can face serious civil or criminal liability if they cross certain lines. Several specific torts and crimes are commonly associated with overzealous newsgathering.",
+q:"Name ONE tort or crime that journalists must be careful to avoid during newsgathering.",
+h:"(Acceptable: trespass, fraud, harassment, or wiretapping)",a:["trespass","trespassing","fraud","harassment","wiretapping"],d:"Trespass / Fraud / Harassment / Wiretapping"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 10 of 20",
+s:"A breakthrough: Marcus Finley is out of the hospital and agrees to a phone interview. You want to record it as evidence. Sandra stops you. \"Before you hit record, what state are you both calling from? Riverside is not a one-party consent state. If both parties don't agree to be recorded, it's illegal.\" She explains how states are categorized by their recording laws.",
+lc:"Recording consent laws vary by state. Some require only one party (you) to consent. Other states require every party on a call to know they are being recorded and agree to it. These are named accordingly.",
+q:"States that require all parties to a call to consent to being recorded are called ___-party consent states.",
+h:"(Fill in the blank &mdash; 'all' or 'two' are both acceptable)",a:["all","all-party","two","two-party"],d:"All (or Two)"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 11 of 20",
+s:"Riverside Police are raiding a warehouse tied to the fraud tonight. A detective you trust offers to let you ride along and film inside the building &mdash; it is privately owned. You're grabbing your camera when Sandra calls. \"Don't go in,\" she says. \"The Supreme Court ruled on media ride-alongs directly. Entering private property with law enforcement crosses a constitutional line.\" She cites a specific case by name.",
+lc:"The Supreme Court directly addressed media ride-alongs and ruled that allowing journalists to enter private homes alongside law enforcement violates the Fourth Amendment rights of the property owners.",
+q:"In Wilson v. _______, the Supreme Court ruled that media ride-alongs into private homes violate the Fourth Amendment.",
+h:"(Fill in the last name)",a:["layne","lanes"],d:"Layne"},
+
+{c:"Ch. 9 - Newsgathering",l:"Question 12 of 20",
+s:"You have submitted twelve interview requests to Mayor Croft's office. Every one has been denied. His communications director sends a final email: \"The Mayor has no legal obligation to speak with The Riverside Ledger. This matter is closed.\" You start drafting an angry response &mdash; then pause. Is the Mayor legally correct?",
+lc:"Reporters often believe public officials should have to answer their questions. But the Constitution does not compel government officials to grant interviews to the press.",
+q:"Do reporters have a constitutional right to force unwilling government officials to grant them an interview?",
+h:"(Yes or No)",a:["no"],d:"No"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 13 of 20",
+s:"The story is nearly ready to publish. Then a subpoena arrives at the Ledger by noon: Mayor Croft's legal team has somehow learned you have a confidential source inside City Hall &mdash; the anonymous insider who gave you the original spreadsheet. You are ordered to name that source in court. Diane looks at you. \"You know what's supposed to protect you here,\" she says quietly.",
+lc:"Many states have enacted specific laws protecting journalists from being compelled to reveal confidential sources or turn over unpublished newsgathering materials in legal proceedings. These laws go by a specific common name.",
+q:"Laws that protect journalists from being forced to reveal confidential sources are called reporter's _____ laws.",
+h:"(One word)",a:["shield","privilege"],d:"Shield (Privilege)"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 14 of 20",
+s:"In court, Croft's attorneys argue that the First Amendment does not give you an absolute privilege to protect sources. They point to a 1972 Supreme Court case &mdash; the foundational precedent in this area. Sandra knows it by heart. \"It's the case that settled the constitutional question,\" she tells you outside the courtroom. \"And the answer was not what journalists wanted.\"",
+lc:"In this landmark case, the Supreme Court held that the First Amendment does not grant journalists an absolute constitutional privilege to refuse to testify before a grand jury about confidential sources. It remains the controlling precedent on this issue.",
+q:"What is the name of this landmark 1972 Supreme Court case? (The case is Branzburg v. _____)",
+h:"(Fill in the last name only)",a:["hayes"],d:"Hayes"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 15 of 20",
+s:"Sandra argues to the judge that even after Branzburg, Croft's team has failed to meet the qualified privilege standard used by many lower courts. She walks through a framework derived from Justice Potter Stewart's Branzburg dissent, laying out every element the other side must prove. \"They have to clear all of it,\" she says. \"Not just some.\"",
+lc:"Under the qualified privilege test many courts have adopted, the party seeking to compel journalist testimony must satisfy a specific multi-part standard &mdash; showing the information is highly relevant, unavailable elsewhere, and necessary to a compelling interest.",
+q:"How many parts must be satisfied under the qualified privilege test for compelling journalist testimony?",
+h:"(Enter the number or spell it out)",a:["3","three"],d:"3 (three)"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 16 of 20",
+s:"The judge leans forward: \"Counsel, we are in federal court. Is there a federal statute that protects this reporter?\" Sandra pauses, then chooses her words carefully. \"Your Honor &mdash; the federal landscape on this question is different from the states. The honest answer may surprise the court.\"",
+lc:"While most states have enacted shield laws for journalists, the status at the federal level is a different and often misunderstood reality. Whether a nationwide federal shield law exists is a critical fact for this hearing.",
+q:"Is there currently a federal shield law protecting journalists in all federal court proceedings nationwide?",
+h:"(Yes or No)",a:["no"],d:"No"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 17 of 20",
+s:"Back at the Ledger, Diane is wavering. She wants to hand over the source's identity to end the legal battle. But your source &mdash; whom you have been calling 'Robin' &mdash; quit their City Hall job, relocated out of Riverside, and handed over the documents entirely because of your promise of confidentiality. Robin's attorney calls: \"If the Ledger breaks that promise, my client will be pursuing legal action.\" Sandra nods. \"They have a valid claim.\"",
+lc:"A specific legal doctrine holds that when a person reasonably relies on a promise &mdash; changing their position significantly as a result &mdash; the person who made the promise can be held legally bound to keep it, even without a formal written contract.",
+q:"The legal doctrine that makes a promise enforceable when someone has detrimentally relied on it is called promissory _______.",
+h:"(Fill in the blank &mdash; one word)",a:["estoppel"],d:"Estoppel"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 18 of 20",
+s:"The judge has heard enough. He orders you to take the stand and name your source. You refuse. He leans forward, voice flat: \"Ms. Vale, I am not punishing you for what you have already done. I am ordering you to comply &mdash; and I will confine you until you do.\" Sandra whispers: \"This is a specific type of contempt. It is coercive, not punitive. Understanding the difference matters for our appeal strategy.\"",
+lc:"Contempt of court has two distinct forms. One punishes past disobedience as a penalty. The other is used purely to coerce future compliance &mdash; the person is jailed or fined until they obey the court's order.",
+q:"What type of contempt is designed to coerce future compliance rather than punish past behavior?",
+h:"(One word)",a:["civil"],d:"Civil"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 19 of 20",
+s:"Two days later, Riverside police arrive at the Ledger with a search warrant. They intend to seize your notebooks, recordings, and hard drives &mdash; everything connected to the Croft investigation. Sandra is on the phone before they finish reading the warrant aloud. \"There is a federal law that specifically limits how law enforcement can come after newsroom materials,\" she says. \"They should not have a warrant. They should have sent something else entirely.\"",
+lc:"The Privacy Protection Act of 1980 was passed specifically to protect journalists from newsroom searches. It generally prohibits law enforcement from using a search warrant to seize journalists' work product, requiring them to use a different legal instrument instead.",
+q:"Under the Privacy Protection Act, law enforcement must generally use a _______ rather than a search warrant to obtain materials from a journalist.",
+h:"(One word &mdash; starts with 'S')",a:["subpoena"],d:"Subpoena"},
+
+{c:"Ch. 10 - Protection of Sources",l:"Question 20 of 20",
+s:"The newsroom search is halted for now. But the following morning, a formal legal document arrives at the Ledger demanding your notes, recordings, and testimony. Sandra sits across from you with a legal pad. \"We are not going to simply comply,\" she says. \"We fight this in court before you hand over a single page. We file something today &mdash; a formal motion to challenge and kill this thing before it goes any further.\"",
+lc:"When a journalist receives a subpoena that appears overbroad or legally improper, the standard legal response &mdash; before complying &mdash; is to file a specific motion in court asking the judge to void or narrow the subpoena's scope.",
+q:"What legal motion should you file in court to challenge or limit an improper subpoena?",
+h:"(Two words &mdash; 'motion to ____')",a:["motion to quash","quash"],d:"Motion to Quash"}
+];
+
+var cur=0,att=[],ans=[];
+var tInt=null,tSec=0,tTotal=1200;
+
+function fmt(s){var m=Math.floor(s/60),sc=s%60;return(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;}
+function startTimer(){
+  tSec=tTotal;updTmr();
+  if(tInt)clearInterval(tInt);
+  tInt=setInterval(function(){
+    tSec--;updTmr();
+    if(tSec<=0){clearInterval(tInt);for(var i=0;i<20;i++)if(ans[i]===null){ans[i]=false;updDot(i);}showWin();}
+  },1000);
+}
+function stopTimer(){if(tInt)clearInterval(tInt);}
+function updTmr(){
+  var el=document.getElementById('timer-display'),fi=document.getElementById('timer-fill');
+  if(!el)return;
+  el.textContent=fmt(tSec);fi.style.width=(tSec/tTotal*100)+'%';
+  if(tSec<=60){el.className='timer-display danger';fi.className='timer-fill danger';}
+  else if(tSec<=180){el.className='timer-display warning';fi.className='timer-fill warning';}
+  else{el.className='timer-display';fi.className='timer-fill';}
+}
+function startGame(){
+  att=[];ans=[];for(var i=0;i<20;i++){att.push(0);ans.push(null);}
+  cur=0;showScr('game');buildDots();render();startTimer();
+}
+function showScr(id){
+  var s=document.querySelectorAll('.screen');
+  for(var i=0;i<s.length;i++)s[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+function buildDots(){
+  var st=document.getElementById('score-strip');st.innerHTML='';
+  for(var i=0;i<20;i++){var d=document.createElement('div');d.className='score-dot';d.id='dot-'+i;d.textContent=i+1;st.appendChild(d);}
+}
+function updDot(i){
+  var d=document.getElementById('dot-'+i);
+  if(ans[i]===true){d.className='score-dot correct';d.textContent='\u2713';}
+  else if(ans[i]===false){d.className='score-dot wrong';d.textContent='\u2717';}
+}
+function render(){
+  var q=Q[cur];
+  document.getElementById('chapter-tag').textContent=q.c;
+  document.getElementById('q-label').textContent=q.l;
+  document.getElementById('story-beat').innerHTML=q.s;
+  document.getElementById('legal-context').innerHTML=q.lc;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('hint-text').innerHTML=q.h;
+  var inp=document.getElementById('answer-input');inp.value='';inp.disabled=false;
+  var fb=document.getElementById('feedback');fb.className='feedback';fb.textContent='';fb.style.display='none';
+  var u=att[cur];for(var t=1;t<=3;t++){var e=document.getElementById('try'+t);if(t<=u)e.classList.add('used');else e.classList.remove('used');}
+  var done=ans[cur]!==null;
+  var nb=document.getElementById('next-btn'),pb=document.getElementById('prev-btn');
+  pb.disabled=(cur===0);nb.disabled=!done;
+  if(done){
+    inp.disabled=true;fb.style.display='block';
+    if(ans[cur]===true){fb.className='feedback correct';fb.textContent='\u2713 Correct! The answer is: '+q.d;}
+    else{fb.className='feedback wrong';fb.textContent='\u2717 Out of attempts. The answer is: '+q.d;}
+  }
+  nb.textContent=(cur===19&&done)?'See Results \u2192':'Next \u2192';
+  if(cur===19&&done)nb.disabled=false;
+  var dn=0;for(var j=0;j<ans.length;j++)if(ans[j]!==null)dn++;
+  document.getElementById('progress-fill').style.width=(dn/20*100)+'%';
+  document.getElementById('q-counter').textContent=(cur+1)+' / 20';
+  if(!done)inp.focus();
+}
+function checkAnswer(){
+  if(ans[cur]!==null)return;
+  var q=Q[cur],raw=document.getElementById('answer-input').value.trim().toLowerCase();
+  if(!raw)return;
+  var ok=false;for(var i=0;i<q.a.length;i++)if(q.a[i]===raw){ok=true;break;}
+  var fb=document.getElementById('feedback');fb.style.display='block';
+  if(ok){
+    ans[cur]=true;updDot(cur);
+    fb.className='feedback correct';fb.textContent='\u2713 Correct! The answer is: '+q.d;
+    document.getElementById('answer-input').disabled=true;
+    var nb=document.getElementById('next-btn');nb.disabled=false;if(cur===19)nb.textContent='See Results \u2192';
+  } else {
+    att[cur]++;var u=att[cur];if(u<=3)document.getElementById('try'+u).classList.add('used');
+    if(u>=3){
+      ans[cur]=false;updDot(cur);
+      fb.className='feedback wrong';fb.textContent='\u2717 Out of attempts. The answer is: '+q.d;
+      document.getElementById('answer-input').disabled=true;
+      var nb2=document.getElementById('next-btn');nb2.disabled=false;if(cur===19)nb2.textContent='See Results \u2192';
+    } else {
+      fb.className='feedback wrong';var lft=3-u;
+      fb.textContent='\u2717 Not quite. Try again! ('+lft+' attempt'+(lft===1?'':'s')+' left)';
+      document.getElementById('answer-input').value='';document.getElementById('answer-input').focus();
+    }
+  }
+  var dn=0;for(var k=0;k<ans.length;k++)if(ans[k]!==null)dn++;
+  document.getElementById('progress-fill').style.width=(dn/20*100)+'%';
+}
+function nextQ(){if(cur===19){showWin();return;}cur++;render();}
+function prevQ(){if(cur>0){cur--;render();}}
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter')return;
+  if(!document.getElementById('game').classList.contains('active'))return;
+  var inp=document.getElementById('answer-input');
+  if(!inp.disabled&&inp.value.trim())checkAnswer();
+  else if(!document.getElementById('next-btn').disabled)nextQ();
+});
+function showWin(){
+  stopTimer();var used=tTotal-tSec;showScr('victory');
+  var sc=0;for(var i=0;i<ans.length;i++)if(ans[i]===true)sc++;
+  document.getElementById('final-score').textContent=sc;
+  document.getElementById('final-time').textContent=fmt(used);
+  var p=sc/20,g,cm;
+  if(p>=0.9){g='A';cm='Outstanding, Jordan. The story runs front page. Mayor Croft resigns by morning.';}
+  else if(p>=0.8){g='B';cm='Strong reporting. A few legal missteps, but the story gets published and the truth comes out.';}
+  else if(p>=0.7){g='C';cm='You got the story out, but those legal errors could come back to haunt you. Review your notes.';}
+  else{g='D';cm='The investigation stalled. Croft is still in office. Revisit Chapters 9 & 10 before your next assignment.';}
+  document.getElementById('grade-badge').textContent=g;
+  document.getElementById('grade-comment').textContent=cm;
+  var key='<table><tr><th>#</th><th>Question</th><th>Answer</th><th>Result</th></tr>';
+  for(var j=0;j<Q.length;j++){
+    var q=Q[j],r=ans[j],bg=j%2===0?'#f5efe0':'#ede3cc',ic=r===true?'\u2713':'\u2717',co=r===true?'green':'#b8321a';
+    key+='<tr style="background:'+bg+'"><td style="padding:5px 10px;font-weight:bold;">'+(j+1)+'</td><td style="padding:5px 10px;">'+q.q+'</td><td style="padding:5px 10px;font-weight:bold;color:#b8321a;">'+q.d+'</td><td style="padding:5px 10px;text-align:center;font-weight:bold;font-size:16px;color:'+co+'">'+ic+'</td></tr>';
+  }
+  key+='</table>';document.getElementById('answer-key').innerHTML=key;
+}
+function restartGame(){startGame();}
+</script>
+</body>
+</html>
